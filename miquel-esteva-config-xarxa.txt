@@ -1,0 +1,221 @@
+1. Configureu dos ordinadors fent servir la comanda ip amb dues adreces del rang 172.16.0.0 i comproveu que es veuen entre si. Indiqueu les comandes que heu utilitzat a)per configurar-les b) per comprovar que es veuen.
+PER CONFIGURAR-LES
+    [root@i15 ~]# ip address add 172.16.0.15/16 dev enp5s0
+PER COMPROVAR QUE ES VEUEN
+[root@i15 ~]# ip a s
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: enp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 40:8d:5c:e4:37:c7 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.2.45/16 brd 192.168.255.255 scope global dynamic enp5s0
+       valid_lft 17303sec preferred_lft 17303sec
+    inet 172.16.0.15/16 scope global enp5s0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::428d:5cff:fee4:37c7/64 scope link 
+       valid_lft forever preferred_lft forever
+
+[root@i15 ~]# ping 172.16.0.13
+PING 172.16.0.13 (172.16.0.13) 56(84) bytes of data.
+64 bytes from 172.16.0.13: icmp_seq=1 ttl=64 time=0.184 ms
+64 bytes from 172.16.0.13: icmp_seq=2 ttl=64 time=0.179 ms
+64 bytes from 172.16.0.13: icmp_seq=3 ttl=64 time=0.417 ms
+
+
+2. Com podem descobrir l'adreça mac d'un altre dispositiu de la nostra xarxa (que no sigui el nostre)? Indiqueu-ne les comandes i la sortida.
+
+[root@i15 ~]# arp -a
+? (172.16.0.13) at 40:8d:5c:e4:1d:e4 [ether] on enp5s0
+madiba.informatica.escoladeltreball.org (192.168.0.11) at 60:a4:4c:b1:f4:ed [ether] on enp5s0
+gandhi.informatica.escoladeltreball.org (192.168.0.10) at 60:a4:4c:b1:f4:ed [ether] on enp5s0
+gw.informatica.escoladeltreball.org (192.168.0.1) at 60:a4:4c:b1:f4:ed [ether] on enp5s0
+
+3. Com podem canviar el nom d'una interfície de xarxa amb la comanda ip? Poseu exemple
+
+[root@i15 ~]# ip link set enp5s0 down
+[root@i15 ~]# ip link set enp5s0 name interficie
+[root@i15 ~]# ip link set interficie up
+[root@i15 ~]# ifconfig
+interficie: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet6 fe80::c22c:102d:921a:a588  prefixlen 64  scopeid 0x20<link>
+        ether 40:8d:5c:e4:37:c7  txqueuelen 1000  (Ethernet)
+        RX packets 198524  bytes 68185652 (65.0 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 167610  bytes 10274038 (9.7 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+[root@i15 ~]# ip address add 172.16.0.15/16 dev interficie
+[root@i15 ~]# ip a s
+2: interficie: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 40:8d:5c:e4:37:c7 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.2.45/16 brd 192.168.255.255 scope global dynamic interficie
+       valid_lft 21451sec preferred_lft 21451sec
+    inet 172.16.0.15/16 scope global interficie
+       valid_lft forever preferred_lft forever
+    inet6 fe80::c22c:102d:921a:a588/64 scope link 
+       valid_lft forever preferred_lft forever
+
+4. Busqueu el paquet RPM per a la utilitat netperf i instal.leu-lo (copieu netperf al directori cp netperf /usr/local/bin per tal que sigui accessible desde qualsevol lloc). Arrenqueu el servidor en una de les màquines i el client en l'altra tot comprovant la velocitat que obtenim entre els dos. Indiqueu quina es la velocitat obtinguda. Feu servir aquest script en el client per tal de comprovar TCP full-duplex:
+
+     for i in 1
+         do
+          netperf -H 10.1.2.33 -t TCP_STREAM -B "outbound" -i 10 -P 0 -v 0 \
+            -- -s 256K -S 256K &
+          netperf -H 10.1.2.33 -t TCP_MAERTS -B "inbound"  -i 10 -P 0 -v 0 \
+            -- -s 256K -S 256K &
+         done
+
+
+[root@i15 ~]# dnf install ftp://rpmfind.net/linux/dag/redhat/el6/en/x86_64/dag/RPMS/netperf-2.6.0-1.el6.rf.x86_64.rpm
+Last metadata expiration check: 1:33:58 ago on Fri Sep 23 09:10:43 2016.
+Dependencies resolved.
+======================================================================================
+ Package          Arch            Version                 Repository             Size
+======================================================================================
+Upgrading:
+ netperf          x86_64          2.7.0-1.el6.rf          @commandline          183 k
+
+Transaction Summary
+======================================================================================
+Upgrade  1 Package
+
+Total size: 183 k
+Is this ok [y/N]: y
+Downloading Packages:
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Upgrading   : netperf-2.7.0-1.el6.rf.x86_64                                     1/2 
+install-info: /usr/share/info/: empty file
+  Cleanup     : netperf-2.4.5-1.el6.rf.x86_64                                     2/2 
+  Verifying   : netperf-2.7.0-1.el6.rf.x86_64                                     1/2 
+  Verifying   : netperf-2.4.5-1.el6.rf.x86_64                                     2/2 
+
+Upgraded:
+  netperf.x86_64 2.6.0-1.el6.rf          
+
+
+[root@i15 ~]# cp /usr/bin/netperf /usr/local/bin/
+[root@i15 ~]# cp /usr/bin/netserver /usr/local/bin/
+[root@i15 ~]# netserver
+Starting netserver with host 'IN(6)ADDR_ANY' port '12865' and family AF_UNSPEC
+
+En el meu cas inicio el servidor i una altra maquina copia l'script i canvia la ip per la meva (172.16.0.15). S'executa en segon pla. fem jobs per veure
+que s'estan executant. 
+
+Al cap d'una estona apareix: 
+	Inbound: 91.39
+	Outbound:91.44 
+                               
+Comprovar que el netserver segueix engegat: 
+
+[root@i15 ~]# nmap localhost -p 12865
+
+
+5. Canvieu ara la MTU de les interfícies de xarxa dels dos ordinadors a un valor de 9000 bytes. comproveu de nou quina és la velocitat obtinguda. Expliqueu els resultats tot comparant-los.
+
+# ip link set enp5s0 mtu 9000
+
+2: enp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 9000 qdisc fq_codel state UP group default qlen 1000
+
+Un cop canviem la mtu i comprovem de nou la velocitat, no ens dóna cap resultat. 
+
+Ja que el switch no accepta mtu's tan elevades. Llavors el que podem fer es connectar amb el cable de xarxa els dos PC's directament i tornem a iniciar 
+netperf client. 
+Llavors les velocitats augmenten significativament:
+	Inbound: 483.20
+	Outbound: 483.07
+
+
+Per fer els canvis permanents:
+
+deberemos añadir la opción MTU en el fichero de configuración del dispositivo (/etc/sysconfig/network-scripts/ifcfg-eth2)
+
+6. Realitzeu ara la mateixa configuració estàtica d'adreces IP amb la comanda nmcli. Indiqueu-ne els passos.
+
+[root@i15 ~]# nmcli con add con-name my-eth0 ifname enp5s0 type ethernet ip4 172.16.0.15/24 gw4 172.168.0.1
+Connection 'my-eth0' (1a33675a-1836-444e-810e-55952b246d54) successfully added.
+[root@i15 ~]# nmcli con show
+NAME     UUID                                  TYPE            DEVICE 
+enp5s0   2cf1a988-097e-43df-abc5-a0b98d986b4c  802-3-ethernet  enp5s0 
+my-eth0  1a33675a-1836-444e-810e-55952b246d54  802-3-ethernet  --     
+
+[root@i15 ~]# nmcli connection up my-eth0
+Connection successfully activated (D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/1)
+
+[root@i15 ~]# ip a s
+2: enp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 40:8d:5c:e4:37:c7 brd ff:ff:ff:ff:ff:ff
+    inet 172.16.0.13/24 brd 172.16.0.255 scope global enp5s0
+
+
+7. On es troba la configuració de servidors de noms de domini?
+
+[root@i15 ~]# cat /etc/resolv.conf
+# Generated by NetworkManager
+search informatica.escoladeltreball.org
+nameserver 192.168.0.10
+nameserver 10.1.1.200
+nameserver 193.152.63.197
+
+8. Realitzeu la mateixa configuració anterior de manera permanent (ifcfg-...). Quins són els paràmetres de la comanda nmcli per tal de forçar que s'apliquin els canvis de xarxa que hem fet als fitxers?
+
+Modifiquem el fitxer de configuració de la connexió que volguem modificar: 
+
+# vim /etc/sysconfig/network-scripts/ifcfg-my-eth0
+TYPE=Ethernet
+BOOTPROTO=none
+IPADDR=172.16.0.15
+PREFIX=24
+GATEWAY=172.168.0.1
+DEFROUTE=yes
+IPV4_FAILURE_FATAL=no
+IPV6INIT=yes
+IPV6_AUTOCONF=yes
+IPV6_DEFROUTE=yes
+IPV6_PEERDNS=yes
+IPV6_PEERROUTES=yes
+IPV6_FAILURE_FATAL=no
+IPV6_ADDR_GEN_MODE=stable-privacy
+NAME=my-eth0
+UUID=6811c726-c5f9-487a-a69e-f018ec47a6c6
+DEVICE=enp5s0
+ONBOOT=yes
+
+Tot seguit engeguem la interficie i així s'aplicaràn els canvis: 
+
+[root@i15 ~]# nmcli con up my-eth0
+
+
+9. Com podem canviar de manera permanent el nom de les interfícies de xarxa (que sobrevisquin a un reinici?) /etc/udev/rules.d/70-persistent-net.rules
+
+Primer creem el fitxer: /etc/udev/rules.d/70-persistent-net.rules
+
+Al fitxer enganxem la següent linia: 
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="MAC DE LA MAQUINA", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="e*", NAME="mi-interfaz"
+
+10. Com podem traduïr un nom de domini per la seva/seves adreces IP? I com podem trobar el nom de domini a partir d'una adreça IP?
+
+Podem veure la ip d'una adreça fent un ping: 
+
+[root@i15 ~]# ping www.google.es
+PING www.google.es (216.58.201.131) 56(84) bytes of data.
+64 bytes from mad06s25-in-f131.1e100.net (216.58.201.131): icmp_seq=1 ttl=54 time=10.9 ms
+
+Podem veure l'adreça a partir d'una IP amb la comanda nslookup:
+
+[root@i15 ~]# nslookup 216.58.201.131
+Server:		192.168.0.10
+Address:	192.168.0.10#53
+
+Non-authoritative answer:
+131.201.58.216.in-addr.arpa	name = mad06s25-in-f131.1e100.net.
+131.201.58.216.in-addr.arpa	name = mad06s25-in-f3.1e100.net.
+
+
+
